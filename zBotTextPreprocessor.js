@@ -1,49 +1,22 @@
 const twEmojiDict = require("./utils/twEmojiDict");
 const emojiRegex = require("./utils/emojiRegex");
 
+const customEmojiRegexWithSpace = /<:[a-zA-Z0-9_]+:([0-9]+)>( )?/g;
+const emojiRegexWithSpace = new RegExp(`(${emojiRegex().source})( )?`, "gu");
+
 function zBotTextPreprocessor(text, dictionary){
     text = text
         .replace(/[a-zA-Z]*:\/\/\S*/g, "")
         .replace(/<(@!?|#|@&)[a-zA-Z0-9]+>/g, "")
+        .replace(customEmojiRegexWithSpace, "<::$1>")
+        .replace(emojiRegexWithSpace, "$1")
     ;
 
-    for(const key in dictionary){
-        let before = key;
-        let after =  dictionary[key];
+    text = replaceByLongestMatch(text, dictionary);
+    text = replaceByLongestMatch(text, twEmojiDict);
 
-        const keyMatches = /^<:[a-zA-Z0-9_]+:([0-9]+)>$/.exec(key);
-
-        if(keyMatches){
-            const textMatches = RegExp("<:[a-zA-Z0-9_]+:" + keyMatches[1] + ">").exec(text);
-
-            if(textMatches){
-                before = textMatches[0];
-            }
-            else{
-                continue;
-            }
-        }
-
-        text = text
-            .split(before + " ").join(after)
-            .split(before).join(after)
-        ;
-    }
-
-    //const twEmojiDict = require("./utils/twEmojiDict");
-    for(const key in twEmojiDict){
-        let before = key;
-        let after =  twEmojiDict[key];
-
-        text = text
-            .split(before + " ").join(after)
-            .split(before).join(after)
-        ; 
-    }
-
-    //const emojiRegex = require("./utils/emojiRegex");
     text = text
-        .replace(/<:[a-zA-Z0-9_]+:[0-9]+>/g, "")
+        .replace(/<::[0-9]+>/g, "")
         .replace(emojiRegex(), "")
     ;
     
@@ -63,6 +36,17 @@ function zBotTextPreprocessor(text, dictionary){
     }
 
     return splitedText;
+};
+
+function replaceByLongestMatch(text, dictionary){
+    const words = Object.keys(dictionary).toSorted((a, b) => { return b.length - a.length; });
+
+    for(const word of words){
+        const reading = dictionary[word];
+        text = text.replaceAll(word, reading);
+    }
+
+    return text;
 };
 
 module.exports = zBotTextPreprocessor;

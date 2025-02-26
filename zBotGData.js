@@ -103,7 +103,6 @@ const zBotGData = {
 
         this.zBotGuildConfigs[guildId][uuidPropertyName] ??= uuid;
 
-        //return this.zBotGuildConfigs[guildId];
         return true;
     },
 
@@ -146,7 +145,6 @@ const zBotGData = {
 
         this.zBotGuildDictionaries[guildId][uuidPropertyName] ??= uuid;
 
-        //return this.zBotGuildDictionaries[guildId];
         return true;
     },
 

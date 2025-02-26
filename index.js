@@ -107,6 +107,4 @@ client.on(Events.MessageReactionAdd, async(reaction, user) => {
     return;
 });
 
-
-
 client.login(envToken); 

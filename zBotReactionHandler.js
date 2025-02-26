@@ -26,7 +26,7 @@ async function zBotReactionHandler(reaction, user, zBotGData){
     const memberId = user.id;
     const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
-    const text = (reaction.emoji.id === null) ? reaction.emoji.name : "<:CustomEmoji:" + reaction.emoji.id + ">";
+    const text = (reaction.emoji.id === null) ? reaction.emoji.name : "<::" + reaction.emoji.id + ">";
     const dictionary = zBotGData.initGuildDictionaryIfUndefined(guildId);
 
     //const zBotTextPreprocessor = require("./zBotTextPreprocessor");

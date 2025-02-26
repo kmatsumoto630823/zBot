@@ -92,7 +92,6 @@ const zBotSlashCommands = [
                 return;
             }            
     
-            //const guildConfig = zBotGData.restoreConfig(guildId);
             zBotGData.restoreConfig(guildId);
             const guildConfig = zBotGData.initGuildConfigIfUndefined(guildId);
             
@@ -102,7 +101,7 @@ const zBotSlashCommands = [
             zBotGData.restoreDictionary(guildId);
             zBotGData.initGuildQueueIfUndefined(guildId);
 
-            await interaction.reply("こんにちは!ボットを接続しました");
+            await interaction.reply("こんにちは!読み上げボットを接続しました");
             return;            
         }
     },
@@ -499,14 +498,14 @@ const zBotSlashCommands = [
         "options": [
             {
                 "type": ApplicationCommandOptionType.String,
-                "name": "key",
+                "name": "word",
                 "description": "単語または絵文字を入力してください",
                 "required": true
             },
 
             {
                 "type": ApplicationCommandOptionType.String,
-                "name": "value",
+                "name": "reading",
                 "description": "読みを入力してください、登録解除する場合は「null」と入力してください",
                 "required": true
             }
@@ -523,37 +522,40 @@ const zBotSlashCommands = [
                 return;
             }
 
-            let key   = (interaction.options.getString("key")   ?? "").trim();
-            let value = (interaction.options.getString("value") ?? "").trim();
+            const rawWord = (interaction.options.getString("word") ?? "");
 
-            if(key === "" || value === ""){
-                await interaction.reply("keyまたはvalueが入力されてません");
+            const word = rawWord
+                .replace(/<:[a-zA-Z0-9_]+:([0-9]+)>/g, "<::$1>")
+                .replaceAll(" ", "")
+            ;
+
+            const reading = (interaction.options.getString("reading") ?? "")
+                .replace(/<:[a-zA-Z0-9_]+:([0-9]+)>/g, "<::$1>")
+                .replaceAll(" ", "")
+            ;
+
+            if(word === "" || reading === ""){
+                await interaction.reply("wordまたはreadingが入力されてません");
                 return;
             }
 
             const guildDictionary = zBotGData.initGuildDictionaryIfUndefined(guildId);
-            
-            const matches = /^<:[a-zA-Z0-9_]+:([0-9]+)>$/.exec(key);
-
-            if(matches){
-                key = `<:CustomEmoji:${matches[1]}>`;
-            }
     
-            if(value === "null" || value === key){
-                if(guildDictionary[key] === void 0){
-                    await interaction.reply(`「${key}」は辞書登録されていません`);
+            if(reading === "null" || reading === word){
+                if(guildDictionary[word] === void 0){
+                    await interaction.reply(`「${rawWord}」は辞書登録されていません`);
                     return;
                 }
 
-                delete guildDictionary[key];
+                delete guildDictionary[word];
                 
-                await interaction.reply(`「${key}」の辞書登録を解除しました`);
+                await interaction.reply(`「${rawWord}」の辞書登録を解除しました`);
                 return;
             }
     
-            guildDictionary[key] = value;
+            guildDictionary[word] = reading;
 
-            await interaction.reply(`「${key}」を「${value}」に辞書登録しました`);
+            await interaction.reply(`「${rawWord}」を「${reading}」に辞書登録しました`);
             return;
         }
     },
@@ -671,34 +673,8 @@ const zBotSlashCommands = [
     },
 
     {
-        //command that the author personally uses.
-        //requireed "npm install roll".
-        "name" : "dice",
-        "description": "ダイスロールします",
-        "options": [
-            {
-                "type": ApplicationCommandOptionType.String,
-                "name": "dice",
-                "description": "例：六面ダイスは1d6と入力します",
-                "required": true
-            },
-        ],
-
-        "excute": async function(interaction, zBotGData){
-            const Roll = require("roll");
-            const roll = new Roll();
-            const diceString = interaction.options.getString("dice").trim();
-
-            const diceResult = roll.validate(diceString) ? roll.roll(diceString).result : null;
-
-            await interaction.reply(`${diceString} -> ${diceResult}`);
-            return;
-        }
-    },
-
-    {
         "name": "export",
-        "description": "ギルドの設定をエクスポートします",
+        "description": "ギルドの設定をエクスポートします※ただしインポート昨日は未実装",
 
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
@@ -730,7 +706,7 @@ const zBotSlashCommands = [
 
     {
         "name" : "disconnect",
-        "description": "設定の保存後、ボットを切断します",
+        "description": "設定の保存後、読み上げボットを切断します",
 
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
@@ -751,7 +727,7 @@ const zBotSlashCommands = [
             
             zBotGData.deleteGuildData(guildId);
             
-            await interaction.reply("さようなら!ボットを切断します");
+            await interaction.reply("さようなら!読み上げボットを切断します");
             return;
         }
     },

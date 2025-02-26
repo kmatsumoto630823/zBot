@@ -15,7 +15,7 @@ async function zBotTextToSpeech(splitedText, speaker, player, queue){
     const fullTextLength = splitedText.reduce((sum, text) => sum + text.length, 0);
     
     if(fullTextLength > envVoiceServerTextLengthLimit){
-        splitedText = ["文字数が多すぎるので読み上げません"];
+        splitedText = ["文字数が多すぎます"];
     }
 
     //const crypto = require("crypto");
