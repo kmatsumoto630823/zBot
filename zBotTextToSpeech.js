@@ -7,27 +7,26 @@ const envSamplingRate = parseInt(process.env.samplingRate);
 const envQueueTimeout = parseInt(process.env.queueTimeout);
 const envQueueTimeoutInterval = parseInt(process.env.queueTimeoutInterval);
 
-const crypto = require("crypto");
 const { setTimeout } = require("timers/promises");
 const { entersState, AudioPlayerStatus } = require("@discordjs/voice");
 
+//ToDo:ポーリング方式で一旦実装、PromiseQueue方式でいつかは実装したい
 async function zBotTextToSpeech(splitedText, speaker, player, queue){
     const fullTextLength = splitedText.reduce((sum, text) => sum + text.length, 0);
     
     if(fullTextLength > envVoiceServerTextLengthLimit){
-        splitedText = ["文字数が多すぎます"];
+        splitedText = ["文字数が上限を超えています"];
     }
 
-    //const crypto = require("crypto");
-    const uuid = crypto.randomUUID();
+    const ticket = Symbol();
 
-    enQueue(queue, uuid);
+    enQueue(queue, ticket);
 
     let count = Math.floor(envQueueTimeout / envQueueTimeoutInterval);
 
-    while(queue[0] !== uuid){
+    while(queue[0] !== ticket){
         if(count === 0){
-            deQueue(queue, uuid);
+            deQueue(queue, ticket);
             return;
         }
 
@@ -56,15 +55,15 @@ async function zBotTextToSpeech(splitedText, speaker, player, queue){
             return;
         }
 
-        if(queue[0] !== uuid){
-            deQueue(queue, uuid);
+        if(queue[0] !== ticket){
+            deQueue(queue, ticket);
             return;
         }
 
         player.play(resource);
     }
 
-    deQueue(queue, uuid);
+    deQueue(queue, ticket);
 
     return;
 }
@@ -111,17 +110,17 @@ async function voiceSynthesis(text, speaker){
     return resource;
 }
 
-function enQueue(queue, uuid){
-    if(!queue || !uuid) return;
+function enQueue(queue, ticket){
+    if(!queue || !ticket) return;
 
-    queue.push(uuid);
+    queue.push(ticket);
     return;
 }
 
-function deQueue(queue, uuid){
-    if(!queue || !uuid) return;
+function deQueue(queue, ticket){
+    if(!queue || !ticket) return;
 
-    const index = queue.indexOf(uuid);
+    const index = queue.indexOf(ticket);
 
     if(index !== -1){
         queue.splice(0, index + 1);
