@@ -2,8 +2,8 @@
 token = "Your token"
 serverIds = "Your server IDs separated by semicolon(;)"
 
-# voiceServers = "http://localhost:50021?engine=VOICEVOX;http://localhost:50025?engine=SHAREVOX"
-voiceServers = "http://localhost:50021?engine=VOICEVOX"
+# voiceServers = "http://localhost:50021#VOICEVOX;http://localhost:50025#SHAREVOX"
+voiceServers = "http://localhost:50021#VOICEVOX"
 
 voiceServerTextLengthLimit = 160
 
@@ -34,8 +34,8 @@ speakerVolumeScaleUpperLimit =  2.00
 speakerVolumeScaleLowerLimit =  0.00
 
 # oher const values
-samplingRate         = 24000
+samplingRate         = 44100
 cooldownDuration     = 3000
 autocompleteLimit    = 25
-queueTimeout         = 30000
-queueTimeoutInterval = 300
+queueTimeout         = 10000
+queueTimeoutInterval = 100
