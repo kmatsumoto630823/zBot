@@ -75,7 +75,6 @@ $ npm install @discordjs/voice
 $ npm install @discordjs/opus
 $ npm install ffmpeg-static
 $ npm install sodium
-$ npm install axios
 $ npm install dotenv
 
 $ git clone https://github.com/kmatsumoto630823/zbot .
