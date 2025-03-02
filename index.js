@@ -1,8 +1,21 @@
 require("dotenv").config();
 
+// 必須環境変数のリスト
+const requiredEnvVars = [
+    "token",
+    "guildIds",
+    "cooldownDuration",
+];
+
+// 環境変数の存在チェック
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+    console.error(`Error: Missing required environment variables: ${missingEnvVars.join(", ")}`);
+    process.exit(1); // エラー終了
+}
+
 const envToken = process.env.token;
 const envGuildIds = process.env.guildIds;
-
 const envCooldownDuration = parseInt(process.env.cooldownDuration);
 
 const { Client, GatewayIntentBits, Events } = require("discord.js");
@@ -14,18 +27,16 @@ const client = new Client({ "intents": [
     GatewayIntentBits.MessageContent
 ] });
 
-client.zBotGData = require("./zBotGData");
-client.zBotSlashCommands = require("./zBotSlashCommands");
-client.cooldowns = {};
+zBotGData = require("./zBotGData");
+zBotSlashCommands = require("./zBotSlashCommands");
+cooldowns = new Map();
 
 const { generateDependencyReport } = require('@discordjs/voice');
 
 client.once(Events.ClientReady, (cl) => {
+    // コマンドを登録する
     for(const splited of envGuildIds.split(";")){
         const guildId = splited.trim();
-        
-        if(guildId === "") continue;
-        
         cl.application.commands.set(cl.zBotSlashCommands, guildId);
     }
 
@@ -36,8 +47,7 @@ client.once(Events.ClientReady, (cl) => {
 });
 
 client.on(Events.InteractionCreate, async(interaction) => {
-    const { zBotGData, zBotSlashCommands, cooldowns } = interaction.client;
-
+    // zBotSlashCommandsを取得
     const command = zBotSlashCommands.find(
         (x) => { return x.name === interaction.commandName; }
     );
@@ -53,19 +63,22 @@ client.on(Events.InteractionCreate, async(interaction) => {
         const now = Date.now();
         const userId = interaction.user.id;
         
-        if(cooldowns[userId] !== void 0){
-            const expirationTime = cooldowns[userId] + envCooldownDuration;
+        //クールダウンを管理する
+        if(cooldowns.has(userId)){
+            const expirationTime = cooldowns.get(userId);
     
             if(now < expirationTime){
                 interaction.reply({ "content": "コマンドは間隔を空けて実行してください", "ephemeral": true })
                     .catch((error) => { console.error(error); });
     
                 return;
+            } else {
+                cooldowns.delete(userId); //有効期限切れのユーザーIDを削除
             }
         } 
     
-        cooldowns[userId] = now;
-        setTimeout(() => delete cooldowns[userId], envCooldownDuration);
+        cooldowns.set(userId, now + envCooldownDuration);
+        setTimeout(() => cooldowns.delete(userId), envCooldownDuration);
 
         command.excute(interaction, zBotGData)
             .catch((error) => { console.error(error); });
@@ -80,15 +93,12 @@ client.on(Events.InteractionCreate, async(interaction) => {
         return;
     }
 
-    return;
+    return;    
 });
 
 const zBotMessageHandler = require("./zBotMessageHandler");
 
 client.on(Events.MessageCreate, async(message) => {
-    const { zBotGData } = message.client;
-    
-    //const zBotMessageHandler = require("./zBotMessageHandler");
     zBotMessageHandler(message, zBotGData)
         .catch((error) => { console.error(error); });
 
@@ -98,13 +108,10 @@ client.on(Events.MessageCreate, async(message) => {
 const zBotReactionHandler = require("./zBotReactionHandler");
 
 client.on(Events.MessageReactionAdd, async(reaction, user) => {
-    const { zBotGData } = reaction.client;
-    
-    //const zBotReactionHandler = require("./zBotReactionHandler");
     zBotReactionHandler(reaction, user, zBotGData)
         .catch((error) => { console.error(error); });
 
     return;
 });
 
-client.login(envToken); 
+client.login(envToken);
