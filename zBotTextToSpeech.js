@@ -1,11 +1,27 @@
 require("dotenv").config();
 
-const envVoiceServers = process.env.voiceServers || "http://localhost:50021#VOICEVOX";
-const envVoiceServerTextLengthLimit = parseInt(process.env.voiceServerTextLengthLimit) || 100;
+// 必須環境変数のリスト
+const requiredEnvVars = [
+    "voiceServers",
+    "voiceServerTextLengthLimit",
+    "samplingRate",
+    "queueTimeout",
+    "queuePollingInterval",
+];
 
-const envSamplingRate = parseInt(process.env.samplingRate) || 44100;
-const envQueueTimeout = parseInt(process.env.queueTimeout) || 10000;
-const envQueuePollingInterval = parseInt(process.env.queuePollingInterval) || 100;
+// 環境変数の存在チェック
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+if (missingEnvVars.length > 0) {
+    console.error(`Error: Missing required environment variables: ${missingEnvVars.join(", ")}`);
+    process.exit(1); // エラー終了
+}
+
+const envVoiceServers = process.env.voiceServers;
+const envVoiceServerTextLengthLimit = parseInt(process.env.voiceServerTextLengthLimit);
+
+const envSamplingRate = parseInt(process.env.samplingRate);
+const envQueueTimeout = parseInt(process.env.queueTimeout);
+const envQueuePollingInterval = parseInt(process.env.queuePollingInterval);
 
 const { setTimeout } = require("timers/promises");
 const { entersState, AudioPlayerStatus } = require("@discordjs/voice");
