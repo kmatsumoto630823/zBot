@@ -1,5 +1,26 @@
 require("dotenv").config();
 
+// 必須環境変数のリスト
+const requiredEnvVars = [
+    "voiceServers",
+    "speakerSpeedScaleUpperLimit",
+    "speakerSpeedScaleLowerLimit",
+    "speakerPitchScaleUpperLimit",
+    "speakerPitchScaleLowerLimit",
+    "speakerIntonationScaleUpperLimit",
+    "speakerIntonationScaleLowerLimit",
+    "speakerVolumeScaleUpperLimit",
+    "speakerVolumeScaleLowerLimit",
+    "autocompleteLimit"
+];
+
+// 環境変数の存在チェック
+const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar] || process.env[envVar].trim() === "");
+if (missingEnvVars.length > 0) {
+    console.error(`Error: Missing required environment variables: ${missingEnvVars.join(", ")}`);
+    process.exit(1); // エラー終了
+}
+
 const envVoiceServers = process.env.voiceServers;
 
 const envSpeakerSpeedScaleUpperLimit = Number(process.env.speakerSpeedScaleUpperLimit);
@@ -27,6 +48,49 @@ const { AttachmentBuilder } = require("discord.js");
 
 const zBotTextPreprocessor = require("./zBotTextPreprocessor");
 const zBotTextToSpeech = require("./zBotTextToSpeech");
+
+
+// 話者の情報を取得
+const speakersWithStyles = (async () => {
+
+    const result = [];
+
+    for(const splited of envVoiceServers.split(";")){
+        const url = new URL(splited.trim());
+
+        // URLフラグメントをエンジン識別子として扱う(#の部分は取り除く)
+        const engine  = url.hash.replace(/^#/, ""); 
+        const baseURL = url.origin;
+
+        if(!engine) return null;
+
+        const response = await fetch(baseURL + "/speakers", {
+            headers: { "accept" : "application/json" },
+        });
+
+        if(!response.ok){
+            console.error(`speakers API failed: ${response.status} ${response.statusText}`);
+            return null;
+        }
+        
+        const speakers = await response.json();
+
+        for(const speaker of speakers){
+            for(const style of speaker.styles){
+            
+                result.push({
+                    "engine": engine,
+                    "id": style.id,
+                    "speakerName": speaker.name,
+                    "styleName": style.name,
+                    "fqn": `${engine}/${speaker.name}(${style.name})/${style.id}`
+                });
+            }
+        }
+    }
+    
+    return result;
+})();
 
 const zBotSlashCommands = [
     {
@@ -57,7 +121,6 @@ const zBotSlashCommands = [
             const voiceCannelId = interaction.options.getChannel("voice").id;
             const adapterCreator = interaction.guild.voiceAdapterCreator;
     
-            //const { joinVoiceChannel } = require("@discordjs/voice");
             const connection = joinVoiceChannel({
                 "channelId": voiceCannelId,
                 "guildId": guildId,
@@ -69,7 +132,6 @@ const zBotSlashCommands = [
                 return;
             }
     
-            //const { createAudioPlayer, NoSubscriberBehavior } = require("@discordjs/voice");
             const player = createAudioPlayer({
                 "behaviors": {
                   "noSubscriber": NoSubscriberBehavior.Pause,
@@ -113,7 +175,7 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             let list = "";
 
-            const speakers = await getSpeakersWithStyles();
+            const speakers = await speakersWithStyles;
 
             if(!speakers){
                 await interaction.reply("話者IDの一覧を作成に失敗しました");
@@ -149,7 +211,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -160,7 +221,7 @@ const zBotSlashCommands = [
             const [speakerEngine, speakerName, speakerId] = 
                 interaction.options.getString("speaker").trim().split("/");
         
-            const speakers = await getSpeakersWithStyles();
+            const speakers = await speakersWithStyles;
 
             const speaker = speakers.find(
                 (x) => {
@@ -199,8 +260,8 @@ const zBotSlashCommands = [
                 return;
             }
         
-            const speakers = await getSpeakersWithStyles();
-        
+            const speakers = await speakersWithStyles;
+
             if(!speakers){
                 await interaction.respond([]);
                 return;               
@@ -243,7 +304,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -254,7 +314,7 @@ const zBotSlashCommands = [
             const memberId = interaction.member.id;
             const memberName = interaction.member.displayName + "さん" ;
         
-            const speakers = await getSpeakersWithStyles();
+            const speakers = await speakersWithStyles;
         
             if(!speakers){
                 await interaction.reply("話者IDの一覧を作成に失敗しました");
@@ -293,7 +353,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -310,8 +369,8 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                this.options[0].min_value,
-                this.options[0].max_value
+                envSpeakerSpeedScaleLowerLimit,
+                envSpeakerSpeedScaleUpperLimit
             );
 
             memberSpeakerConfig.speedScale = scale;
@@ -347,7 +406,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -364,8 +422,8 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                this.options[0].min_value,
-                this.options[0].max_value
+                envSpeakerSpeedScaleLowerLimit,
+                envSpeakerSpeedScaleUpperLimit
             );
 
             memberSpeakerConfig.pitchScale = scale;
@@ -401,7 +459,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -418,8 +475,8 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                this.options[0].min_value,
-                this.options[0].max_value
+                envSpeakerSpeedScaleLowerLimit,
+                envSpeakerSpeedScaleUpperLimit
             );
 
             memberSpeakerConfig.intonationScale = scale;
@@ -455,7 +512,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -472,8 +528,8 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                this.options[0].min_value,
-                this.options[0].max_value
+                envSpeakerSpeedScaleLowerLimit,
+                envSpeakerSpeedScaleUpperLimit
             );
 
             memberSpeakerConfig.volumeScale = scale;
@@ -514,7 +570,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
 
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
     
             if(!connection){
@@ -576,7 +631,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
 
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
     
             if(!connection){
@@ -591,7 +645,6 @@ const zBotSlashCommands = [
 
             const dictionary = zBotGData.initGuildDictionaryIfUndefined(guildId);
             
-            //const zBotTextPreprocessor = require("./zBotTextPreprocessor");
             const splitedText = zBotTextPreprocessor(text, dictionary);
     
             const speaker = memberSpeakerConfig;
@@ -600,7 +653,6 @@ const zBotSlashCommands = [
 
             await interaction.reply({ "content": "隠れてそっと発言します", "ephemeral": true });
 
-            //const zBotTextToSpeech = require("./zBotTextToSpeech");
             await zBotTextToSpeech(splitedText, speaker, player, queue);
 
             return;
@@ -616,7 +668,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
         
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
         
             if(!connection){
@@ -654,7 +705,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
 
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
     
             if(!connection){
@@ -673,13 +723,38 @@ const zBotSlashCommands = [
     },
 
     {
+        //command that the author personally uses.
+        //requireed "npm install roll".
+        "name" : "dice",
+        "description": "ダイスロールします",
+        "options": [
+            {
+                "type": ApplicationCommandOptionType.String,
+                "name": "dice",
+                "description": "例：六面ダイスは1d6と入力します",
+                "required": true
+            },
+        ],
+
+        "excute": async function(interaction, zBotGData){
+            const Roll = require("roll");
+            const roll = new Roll();
+            const diceString = interaction.options.getString("dice").trim();
+
+            const diceResult = roll.validate(diceString) ? roll.roll(diceString).result : null;
+
+            await interaction.reply(`${diceString} -> ${diceResult}`);
+            return;
+        }
+    },
+
+    {
         "name": "export",
         "description": "ギルドの設定をエクスポートします※ただしインポート昨日は未実装",
 
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
 
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
     
             if(!connection){
@@ -695,7 +770,6 @@ const zBotSlashCommands = [
                 "dict": guildDictionary
             };
 
-            //const { AttachmentBuilder } = require("discord.js");
             const buffer = Buffer.from(JSON.stringify(server, null, 2));
             const attachment = new AttachmentBuilder(buffer, {"name": "zbot.json"});
 
@@ -711,7 +785,6 @@ const zBotSlashCommands = [
         "excute": async function(interaction, zBotGData){
             const guildId = interaction.guildId;
 
-            //const { getVoiceConnection } = require("@discordjs/voice");
             const connection = getVoiceConnection(guildId);
     
             if(!connection){
@@ -751,47 +824,6 @@ const zBotSlashCommands = [
 
 function clamp(value, min, max){
     return Math.min(Math.max(value, min), max);
-}
-
-async function getSpeakersWithStyles(){
-
-    if(this.speakersWithStyles !== void 0){
-        return this.speakersWithStyles;
-    }
-
-    this.speakersWithStyles = [];
-
-    for(const splited of envVoiceServers.split(";")){
-        const url = new URL(splited);
-
-        const engine = url.searchParams.get("engine");
-        const baseURL = url.origin;
-
-        if(!engine) return;
-
-        const response = await fetch(baseURL + "/speakers", {
-            headers: { "accept" : "application/json" },
-        });
-
-        if(!response.ok) return;
-        
-        const speakers = await response.json();
-
-        for(const speaker of speakers){
-            for(const style of speaker.styles){
-            
-                this.speakersWithStyles.push({
-                    "engine": engine,
-                    "id": style.id,
-                    "speakerName": speaker.name,
-                    "styleName": style.name,
-                    "fqn": `${engine}/${speaker.name}(${style.name})/${style.id}`
-                });
-            }
-        }
-    }
-    
-    return this.speakersWithStyles;
 }
 
 module.exports = zBotSlashCommands;
