@@ -2,6 +2,12 @@ const { getVoiceConnection } = require("@discordjs/voice");
 const zBotTextPreprocessor = require("./zBotTextPreprocessor");
 const zBotTextToSpeech = require("./zBotTextToSpeech");
 
+/**
+ * メッセージにリアクションが追加された際のハンドラー
+ * @param {object} reaction - Discord のリアクションオブジェクト
+ * @param {object} user - Discord のユーザーオブジェクト
+ * @param {object} zBotGData - zBot のグローバルデータオブジェクト
+ */
 async function zBotReactionHandler(reaction, user, zBotGData){
     if(user.bot) return;
     
@@ -9,7 +15,8 @@ async function zBotReactionHandler(reaction, user, zBotGData){
 
     const guildId = reaction.message.guildId;
 
-    //const { getVoiceConnection } = require("@discordjs/voice");
+    if(!guildId) return;
+
     const connection = getVoiceConnection(guildId);
 
     if(!connection) return;
@@ -27,19 +34,17 @@ async function zBotReactionHandler(reaction, user, zBotGData){
     const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
     const text = (reaction.emoji.id === null) ? reaction.emoji.name : "<::" + reaction.emoji.id + ">";
-    const dictionary = zBotGData.initGuildDictionaryIfUndefined(guildId);
+    const dict = zBotGData.initGuildDictionaryIfUndefined(guildId);
 
-    //const zBotTextPreprocessor = require("./zBotTextPreprocessor");
-    const splitedText = zBotTextPreprocessor(text, dictionary);
+    const splitedText = zBotTextPreprocessor(text, dict);
     
     const speaker = memberSpeakerConfig;
     const player = connection.state.subscription.player;
     const queue = zBotGData.initGuildQueueIfUndefined(guildId);
 
-    //const zBotTextToSpeech = require("./zBotTextToSpeech");
     await zBotTextToSpeech(splitedText, speaker, player, queue);
 
     return;
 };
 
-module.exports = zBotReactionHandler;
+module.exports = zBotReactionHandler;]
