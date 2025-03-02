@@ -42,13 +42,12 @@ VOICEVOXエンジンへのリクエストのキャッシュや負荷分散はNGI
 - Redhat Enterprise Linux 9（Minimal + Development Tools）またはWindows 11
 - Node.js v20
 - NPM Packages
-  - "@discordjs/opus" ※Windowsので導入失敗する場合は"opusscript"
+  - "@discordjs/opus" ※Windowsので導入失敗する場合は"opusscript"を指定
   - "@discordjs/voice"
-  - "axios"
   - "discord.js"
   - "dotenv"
   - "ffmpeg-static"
-  - "sodium" ※Windowsので導入失敗する場合は"tweetnacl"
+  - "sodium" ※Windowsので導入失敗する場合は"tweetnacl"を指定
 
 @discordjs/voiceの依存パッケージは代替できるものがあるので各自の判断で読み替えること  
 https://discordjs.guide/voice/#extra-dependencies
@@ -98,8 +97,8 @@ voiceServersにはhttp://[ホスト名]:[ポート]?engine=[エンジン名]の�
 token = "Your token"
 serverIds = "Your server IDs separated by semicolon(;)"
 
-# voiceServers = "http://localhost:50021?engine=VOICEVOX;http://localhost:50025?engine=SHAREVOX"
-voiceServers = "http://localhost:50021?engine=VOICEVOX"
+# voiceServers = "http://localhost:50021#VOICEVOX;http://localhost:50025#SHAREVOX"
+voiceServers = "http://localhost:50021#VOICEVOX"
 
 voiceServerTextLengthLimit = 160
 
