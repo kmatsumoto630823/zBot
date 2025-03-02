@@ -1,48 +1,66 @@
 const twEmojiDict = require("./utils/twEmojiDict");
 const emojiRegex = require("./utils/emojiRegex");
 
-const customEmojiRegexWithSpace = /<:[a-zA-Z0-9_]+:([0-9]+)>( )?/g;
-const emojiRegexWithSpace = new RegExp(`(${emojiRegex().source})( )?`, "gu");
+const compiledEmojiRegex = emojiRegex();
+const compiledEmojiRegexWithSpace = new RegExp(`(${compiledEmojiRegex.source}) ?`, "gu");
 
-function zBotTextPreprocessor(text, dictionary){
-    text = text
-        .replace(/[a-zA-Z]*:\/\/\S*/g, "")
-        .replace(/<(@!?|#|@&)[a-zA-Z0-9]+>/g, "")
-        .replace(customEmojiRegexWithSpace, "<::$1>")
-        .replace(emojiRegexWithSpace, "$1")
-    ;
+/**
+ * テキストを読み上げ用に前処理する
+ * @param {string} text - 処理するテキスト
+ * @param {object} dict - ユーザー辞書
+ * @returns {string[]} - 分割されたテキストの配列
+ */
+function zBotTextPreprocessor(text, dict){
+    // URL の削除
+    text = text.replace(/[a-zA-Z]*:\/\/\S*/g, "");
 
-    text = replaceByLongestMatch(text, dictionary);
+    // カスタム絵文字の正規化(絵文字を<::id>に置換、直後のスペースを削除)
+    text = text.replace(/<a?:\w+:(\d+)> ?/g, "<::$1>");
+
+    // 標準絵文字の正規化(絵文字の直後のスペースを削除)
+    text = text.replace(compiledEmojiRegexWithSpace, "$1");
+
+    // メンション等の削除
+    text = text.replace(/(<a?:\w+:\d+>|<@!?(\d+)>|<@&\d+>|<#\d+>|<t:\d+(?::[tTdDfFR])?>|<\/\w+:\d+>)/g, "");
+
+    // ユーザー辞書による置換
+    text = replaceByLongestMatch(text, dict);
+
+    // twEmoji 辞書による置換
     text = replaceByLongestMatch(text, twEmojiDict);
 
-    text = text
-        .replace(/<::[0-9]+>/g, "")
-        .replace(emojiRegex(), "")
-    ;
-    
-    text = text
-        .replace(/\r?\n/g, "\0")
-        .replace(/[!\?！？。)]+/g, (x) => { return x + "\0\0"; })
-        .replace(/(?<!\0)\0(?!\0)/g, "、")
-        .replace(/\0{2,}/g, "\0")
-    ;
+    // カスタム絵文字の削除
+    text = text.replace(/<::\d+>/g, "");
 
-    const splitedText = [];
+    // 標準絵文字の削除
+    text = text.replace(compiledEmojiRegex, "");
     
-    for(const splited of text.split("\0")){
-        if(splited === "") continue;
-        
-        splitedText.push(splited);
-    }
+    // 改行を文の区切り(\0)に置換
+    text = text.replace(/\r?\n/g, "\0");
+
+    // 文末処理(文末に\0\0を挿入)
+    text = text.replace(/[!\?！？。)]+/g, x => x + "\0\0");
+
+    // 連続していない区切り(\0)を読点（、）に置換
+    text = text.replace(/(?<!\0)\0(?!\0)/g, "、");
+
+    // テキストの分割と空文字の削除
+    const splitedText = text.split("\0").filter(x => x !== "");
 
     return splitedText;
 };
 
-function replaceByLongestMatch(text, dictionary){
-    const words = Object.keys(dictionary).toSorted((a, b) => { return b.length - a.length; });
+/**
+ * 辞書に基づき、最長一致でテキストを置換する
+ * @param {string} text - 置換対象のテキスト
+ * @param {object} dict - 置換辞書
+ * @returns {string} - 置換後のテキスト
+ */
+function replaceByLongestMatch(text, dict){
+    const sortedWordsByLength = Object.keys(dict).toSorted((a, b) => b.length - a.length);
 
-    for(const word of words){
-        const reading = dictionary[word];
+    for(const word of sortedWordsByLength){
+        const reading = dict[word];
         text = text.replaceAll(word, reading);
     }
 
