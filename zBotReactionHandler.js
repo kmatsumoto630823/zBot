@@ -47,4 +47,4 @@ async function zBotReactionHandler(reaction, user, zBotGData){
     return;
 };
 
-module.exports = zBotReactionHandler;]
+module.exports = zBotReactionHandler;
