@@ -1,0 +1,5 @@
+node_modules/
+guild_configs/
+guild_dictionaries/
+.env
+
