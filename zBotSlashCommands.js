@@ -594,6 +594,12 @@ const zBotSlashCommands = [
                 return;
             }
 
+            const HIRAGANA_ONLY_REGEX = /^[\u3040-\u309F]+$/;
+            if(HIRAGANA_ONLY_REGEX.test(word)){
+                await interaction.reply("ひらがなだけのwordは登録できません");
+                return;
+            }
+
             const guildDictionary = zBotGData.initGuildDictionaryIfUndefined(guildId);
     
             if(reading === "null" || reading === word){
