@@ -11,7 +11,8 @@ const requiredEnvVars = [
     "speakerIntonationScaleLowerLimit",
     "speakerVolumeScaleUpperLimit",
     "speakerVolumeScaleLowerLimit",
-    "autocompleteLimit"
+    "autocompleteLimit",
+    "dictionaryEntryLimit"
 ];
 
 // 環境変数の存在チェック
@@ -36,6 +37,8 @@ const envSpeakerVolumeScaleUpperLimit = Number(process.env.speakerVolumeScaleUpp
 const envSpeakerVolumeScaleLowerLimit = Number(process.env.speakerVolumeScaleLowerLimit);
 
 const envAutocompleteLimit = parseInt(process.env.autocompleteLimit);
+const envDictionaryEntryLimit = parseInt(process.env.dictionaryEntryLimit);
+
 
 const { getVoiceConnection } = require("@discordjs/voice");
 const { joinVoiceChannel } = require("@discordjs/voice");
@@ -611,6 +614,11 @@ const zBotSlashCommands = [
                 delete guildDictionary[word];
                 
                 await interaction.reply(`「${rawWord}」の辞書登録を解除しました`);
+                return;
+            }
+
+            if(guildDictionary.length > envDictionaryEntryLimit){
+                await interaction.reply("辞書登録上限を超えています");
                 return;
             }
     

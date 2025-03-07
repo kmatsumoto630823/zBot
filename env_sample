@@ -38,4 +38,5 @@ samplingRate         = 44100
 cooldownDuration     = 3000
 autocompleteLimit    = 25
 queueTimeout         = 10000
-queueTimeoutInterval = 100
+queuePollingInterval = 100
+dictionaryEntryLimit = 1000
