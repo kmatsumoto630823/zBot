@@ -186,6 +186,7 @@ zBotGData.prototype.restoreData = function(guildId, path, target, initFunc){
             return false;
         }
     }
+    
     return true;
 }
 
