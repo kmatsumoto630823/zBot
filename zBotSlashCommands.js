@@ -157,14 +157,26 @@ const zBotSlashCommands = [
                 return;
             }            
     
-            zBotGData.restoreConfig(guildId);
+            if(!zBotGData.restoreConfig(guildId)){
+                connection.destroy();
+
+                await interaction.reply("ギルド設定の復元に失敗しました");
+                return;
+            }
+
             const guildConfig = zBotGData.initGuildConfigIfUndefined(guildId);
             
             guildConfig.textChannelId = textCannelId;
             guildConfig.voiceChannelId = voiceCannelId;
 
-            zBotGData.restoreDictionary(guildId);
-            zBotGData.initGuildQueueIfUndefined(guildId);
+            if(!zBotGData.restoreDictionary(guildId)){
+                connection.destroy();
+
+                await interaction.reply("辞書設定の復元に失敗しました");
+                return;                
+            }
+
+            //const guildDictionary = zBotGData.initGuildQueueIfUndefined(guildId);
 
             await interaction.reply("こんにちは!読み上げボットを接続しました");
             return;            
@@ -736,6 +748,7 @@ const zBotSlashCommands = [
         }
     },
 
+    /*
     {
         //command that the author personally uses.
         //requireed "npm install roll".
@@ -761,6 +774,7 @@ const zBotSlashCommands = [
             return;
         }
     },
+    */
 
     {
         "name": "export",
