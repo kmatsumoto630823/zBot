@@ -9,6 +9,7 @@ const requiredEnvVars = [
     "queuePollingInterval",
 ];
 
+// 環境変数の存在チェック
 require("./utils/chkEnvVars")(requiredEnvVars);
 
 const envVoiceServers = process.env.voiceServers;
