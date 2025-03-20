@@ -1,14 +1,11 @@
 require("dotenv").config();
 
-// 必須環境変数のリスト
-const requiredEnvVars = [
+// 環境変数の存在チェック
+require("./utils/chkEnvVars")([
     "token",
     "guildIds",
     "cooldownDuration",
-];
-
-// 環境変数の存在チェック
-require("./utils/chkEnvVars")(requiredEnvVars);
+]);
 
 const envToken = process.env.token;
 const envGuildIds = process.env.guildIds;

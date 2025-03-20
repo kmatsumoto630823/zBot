@@ -1,7 +1,7 @@
 require("dotenv").config();
 
-// 必須環境変数のリスト
-const requiredEnvVars = [
+// 環境変数の存在チェック
+require("./utils/chkEnvVars")([
     "voiceServers",
     "speakerSpeedScaleUpperLimit",
     "speakerSpeedScaleLowerLimit",
@@ -13,10 +13,7 @@ const requiredEnvVars = [
     "speakerVolumeScaleLowerLimit",
     "autocompleteLimit",
     "dictionaryEntryLimit"
-];
-
-// 環境変数の存在チェック
-require("./utils/chkEnvVars")(requiredEnvVars);
+]);
 
 const envVoiceServers = process.env.voiceServers;
 

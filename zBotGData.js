@@ -1,7 +1,7 @@
 require("dotenv").config();
 
-// 必須環境変数のリスト
-const requiredEnvVars = [
+// 環境変数の存在チェック
+require("./utils/chkEnvVars")([
     "defaultSpeakerEngine",
     "defaultSpeakerId",
     "defaultSpeakerSpeedScale",
@@ -10,10 +10,7 @@ const requiredEnvVars = [
     "defaultSpeakerVolumeScale",
     "guildConfigsDir",
     "guildDictionariesDir"
-];
-
-// 環境変数の存在チェック
-require("./utils/chkEnvVars")(requiredEnvVars);
+]);
 
 const envDefaultSpeakerEngine = process.env.defaultSpeakerEngine;
 const envDefaultSpeakerId     = parseInt(process.env.defaultSpeakerId);
