@@ -9,12 +9,7 @@ const requiredEnvVars = [
     "queuePollingInterval",
 ];
 
-// 環境変数の存在チェック
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar] || process.env[envVar].trim() === "");
-if(missingEnvVars.length > 0){
-    console.error(`Error: Missing required environment variables: ${missingEnvVars.join(", ")}`);
-    process.exit(1); // エラー終了
-}
+require("./utils/chkEnvVars")(requiredEnvVars);
 
 const envVoiceServers = process.env.voiceServers;
 const envVoiceServerTextLengthLimit = parseInt(process.env.voiceServerTextLengthLimit);
@@ -76,7 +71,6 @@ async function zBotTextToSpeech(splitedText, speaker, player, queue){
     return;
 }
 
-//const { Readable } = require("stream");
 const { createAudioResource, StreamType } = require("@discordjs/voice");
 
 /**
