@@ -48,7 +48,6 @@ DBは使わずサーバーごとの設定ファイルでストア・リストア
   - "discord.js"
   - "dotenv"
   - "ffmpeg-static"
-  - "sodium" ※Windowsので導入失敗する場合は"tweetnacl"を指定
 
 @discordjs/voiceの依存パッケージは代替できるものがあるので各自の判断で読み替えること  
 https://discordjs.guide/voice/#extra-dependencies
@@ -74,7 +73,6 @@ $ npm install discord.js
 $ npm install @discordjs/voice
 $ npm install @discordjs/opus
 $ npm install ffmpeg-static
-$ npm install sodium
 $ npm install dotenv
 
 $ git clone https://github.com/kmatsumoto630823/zbot .
