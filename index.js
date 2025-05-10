@@ -30,7 +30,7 @@ client.once(Events.ClientReady, (cl) => {
     // コマンドを登録する
     for(const splited of envGuildIds.split(";")){
         const guildId = splited.trim();
-        cl.application.commands.set(cl.zBotSlashCommands, guildId);
+        cl.application.commands.set(zBotSlashCommands, guildId);
     }
 
     console.log(generateDependencyReport());
