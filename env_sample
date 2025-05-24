@@ -1,6 +1,6 @@
 # Overwrite below configs with your environment.
 token = "Your token"
-serverIds = "Your server IDs separated by semicolon(;)"
+guildIds = "Your server IDs separated by semicolon(;)"
 
 # voiceServers = "http://localhost:50021#VOICEVOX;http://localhost:50025#SHAREVOX"
 voiceServers = "http://localhost:50021#VOICEVOX"
