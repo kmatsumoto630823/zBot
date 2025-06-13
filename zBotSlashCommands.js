@@ -740,34 +740,6 @@ const zBotSlashCommands = [
         }
     },
 
-    /*
-    {
-        //command that the author personally uses.
-        //requireed "npm install roll".
-        "name" : "dice",
-        "description": "ダイスロールします",
-        "options": [
-            {
-                "type": ApplicationCommandOptionType.String,
-                "name": "dice",
-                "description": "例：六面ダイスは1d6と入力します",
-                "required": true
-            },
-        ],
-
-        "excute": async function(interaction, zBotGData){
-            const Roll = require("roll");
-            const roll = new Roll();
-            const diceString = interaction.options.getString("dice").trim();
-
-            const diceResult = roll.validate(diceString) ? roll.roll(diceString).result : null;
-
-            await interaction.reply(`${diceString} -> ${diceResult}`);
-            return;
-        }
-    },
-    */
-
     {
         "name": "export",
         "description": "ギルドの設定をエクスポートします※ただしインポート昨日は未実装",
