@@ -83,8 +83,6 @@ async function voiceSynthesis(text, speaker){
     const server = servers.find( (x) => { return x.engine === speaker.engine; });
 
     if(!server){
-        // console.error(`Failed to retrieve voice server information for engine '${speaker.engine}'. Please check the configuration format.`);
-        // return null;
         throw new Error(`Failed to retrieve voice server information for engine '${speaker.engine}'. Please check the configuration format.`);
      }
 
@@ -95,23 +93,16 @@ async function voiceSynthesis(text, speaker){
     });
 
     if(!response_audio_query.ok){
-        // console.error(`audio_query API failed: ${response_audio_query.status} ${response_audio_query.statusText}`);
-        // return null;
         throw new Error(`audio_query API failed: ${response_audio_query.status} ${response_audio_query.statusText}`);
     }
 
     const audioQuery = await response_audio_query.json();
 
-    // audioQuery.speedScale       = speaker.speedScale;
-    // audioQuery.pitchScale       = speaker.pitchScale;
-    // audioQuery.intonationScale  = speaker.intonationScale;
-    // audioQuery.volumeScale      = speaker.volumeScale;
-
     // どちらも設定されている場合は、音声合成クエリに適用
-    if(audioQuery.speedScale !== void 0 && speaker.speedScale !== null)                 audioQuery.speedScale      = speaker.speedScale;
-    if(audioQuery.pitchScale !== void 0 && speaker.pitchScale !== null)                 audioQuery.pitchScale      = speaker.pitchScale;
-    if(audioQuery.intonationScale !== void 0 && speaker.intonationScale !== null)       audioQuery.intonationScale = speaker.intonationScale;
-    if(audioQuery.volumeScale !== void 0 && speaker.volumeScale !== null)               audioQuery.volumeScale     = speaker.volumeScale;
+    if(audioQuery.speedScale !== void 0 && speaker.speedScale !== null)                 audioQuery.speedScale            = speaker.speedScale;
+    if(audioQuery.pitchScale !== void 0 && speaker.pitchScale !== null)                 audioQuery.pitchScale            = speaker.pitchScale;
+    if(audioQuery.intonationScale !== void 0 && speaker.intonationScale !== null)       audioQuery.intonationScale       = speaker.intonationScale;
+    if(audioQuery.volumeScale !== void 0 && speaker.volumeScale !== null)               audioQuery.volumeScale           = speaker.volumeScale;
     if(audioQuery.tempoDynamicsScale !== void 0 && speaker.tempoDynamicsScale !== null) audioQuery.tempoDynamicsScale    = speaker.tempoDynamicsScale;
 
     audioQuery.outputSamplingRate = envSamplingRate;
@@ -124,8 +115,6 @@ async function voiceSynthesis(text, speaker){
     });
 
     if(!response_synthesis.ok){
-        // console.error(`synthesis API failed: ${response_synthesis.status} ${response_synthesis.statusText}`);
-        // return null;
         throw new Error(`synthesis API failed: ${response_synthesis.status} ${response_synthesis.statusText}`);
     }
 

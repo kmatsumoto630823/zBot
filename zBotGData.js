@@ -68,7 +68,7 @@ zBotGData.prototype.initMemberSpeakerConfigIfUndefined = function(guildId, membe
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].engine ??= envDefaultSpeakerEngine;
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].id     ??= envDefaultSpeakerId;
 
-    // nullはdefault値として扱う
+    // nullはdefault値として扱う(audio_queryを書き換えない)
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].speedScale         ??= null;
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].pitchScale         ??= null;
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].intonationScale    ??= null;

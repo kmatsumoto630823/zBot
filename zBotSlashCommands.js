@@ -406,7 +406,7 @@ const zBotSlashCommands = [
             }
 
             const memberId = interaction.member.id;
-            const memberName = interaction.member.displayName + "さん";
+            const memberName = interaction.member.displayName;
 
             const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
@@ -452,7 +452,7 @@ const zBotSlashCommands = [
             }
 
             const memberId = interaction.member.id;
-            const memberName = interaction.member.displayName + "さん";
+            const memberName = interaction.member.displayName;
 
             const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
@@ -498,7 +498,7 @@ const zBotSlashCommands = [
             }
 
             const memberId = interaction.member.id;
-            const memberName = interaction.member.displayName + "さん";
+            const memberName = interaction.member.displayName;
 
             const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
@@ -521,7 +521,7 @@ const zBotSlashCommands = [
 
     {
         "name": "tempo",
-        "description": "話者の緩急を変更します",
+        "description": "話者の緩急を変更します(AivisSpeechのみ対応)",
         "options": [
             {
                 "type": ApplicationCommandOptionType.Number,
@@ -544,7 +544,7 @@ const zBotSlashCommands = [
             }
 
             const memberId = interaction.member.id;
-            const memberName = interaction.member.displayName + "さん";
+            const memberName = interaction.member.displayName;
 
             const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
