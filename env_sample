@@ -14,11 +14,6 @@ guildDictionariesDir = "./guild_dictionaries"
 defaultSpeakerEngine = "VOICEVOX"
 defaultSpeakerId     = 3 
 
-defaultSpeakerSpeedScale      = 1.0
-defaultSpeakerPitchScale      = 0.0
-defaultSpeakerIntonationScale = 1.0
-defaultSpeakerVolumeScale     = 1.0
-
 # Ranges of speaker config value.
 # Do not overwrite without a reason.
 speakerSpeedScaleUpperLimit =  2.00
@@ -32,6 +27,10 @@ speakerIntonationScaleLowerLimit =  0.00
 
 speakerVolumeScaleUpperLimit =  2.00
 speakerVolumeScaleLowerLimit =  0.00
+
+# for AivisSpeech only
+speakerTempoDynamicsScaleUpperLimit =  2.00
+speakerTempoDynamicsScaleLowerLimit =  0.00
 
 # oher const values
 samplingRate         = 44100

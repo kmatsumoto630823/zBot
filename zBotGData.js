@@ -4,21 +4,12 @@ require("dotenv").config();
 require("./utils/chkEnvVars")([
     "defaultSpeakerEngine",
     "defaultSpeakerId",
-    "defaultSpeakerSpeedScale",
-    "defaultSpeakerPitchScale",
-    "defaultSpeakerIntonationScale",
-    "defaultSpeakerVolumeScale",
     "guildConfigsDir",
     "guildDictionariesDir"
 ]);
 
 const envDefaultSpeakerEngine = process.env.defaultSpeakerEngine;
 const envDefaultSpeakerId     = parseInt(process.env.defaultSpeakerId);
-
-const envDefaultSpeakerSpeedScale      = Number(process.env.defaultSpeakerSpeedScale);
-const envDefaultSpeakerPitchScale      = Number(process.env.defaultSpeakerPitchScale);
-const envDefaultSpeakerIntonationScale = Number(process.env.defaultSpeakerIntonationScale);
-const envDefaultSpeakerVolumeScale     = Number(process.env.defaultSpeakerVolumeScale);
 
 const envGuildConfigsDir      = process.env.guildConfigsDir;
 const envGuildDictionariesDir = process.env.guildDictionariesDir;
@@ -77,10 +68,12 @@ zBotGData.prototype.initMemberSpeakerConfigIfUndefined = function(guildId, membe
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].engine ??= envDefaultSpeakerEngine;
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].id     ??= envDefaultSpeakerId;
 
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].speedScale      ??= envDefaultSpeakerSpeedScale;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].pitchScale      ??= envDefaultSpeakerPitchScale;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].intonationScale ??= envDefaultSpeakerIntonationScale;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].volumeScale     ??= envDefaultSpeakerVolumeScale;
+    // nullはdefault値として扱う
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].speedScale         ??= null;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].pitchScale         ??= null;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].intonationScale    ??= null;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].volumeScale        ??= null;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].tempoDynamicsScale ??= null;
 
     return this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId];
 }
@@ -175,8 +168,7 @@ zBotGData.prototype.restoreData = function(guildId, path, target, initFunc){
             const hash = crypto.createHash("sha256").update(json).digest("hex");
             obj.__hash__ = hash;
         }else{
-            console.error(`Failed to read or parse file: ${path} (Guild: ${guildId})`, e);
-            return false;
+            throw new Error(`Failed to read or parse file: ${path} (Guild: ${guildId}). Details: ${e.message}`);
         }
     }
     
@@ -198,13 +190,15 @@ zBotGData.prototype.saveData = function(guildId, path, target){
         const hash2 = crypto.createHash("sha256").update(json).digest("hex");
     
         // 事前に取得したハッシュ値と現在のファイルのハッシュ値が一致しない場合(データが変更されている)
-        if(hash1 !== hash2) return false;
+        if(hash1 !== hash2){
+            // return false;
+            throw new Error(`Data mismatch for guild ${guildId}: expected hash ${hash1}, got ${hash2}`);
+        }
     
         delete obj.__hash__;
         fs.writeFileSync(path, JSON.stringify(obj));
     }catch(e){
-        console.error(`Failed to save file: ${path} (Guild: ${guildId})`, e);
-        return false;
+        throw new Error(`Failed to save file: ${path} (Guild: ${guildId}). Details: ${e.message}`);
     }
 
     return true;

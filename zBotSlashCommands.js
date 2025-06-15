@@ -11,6 +11,8 @@ require("./utils/chkEnvVars")([
     "speakerIntonationScaleLowerLimit",
     "speakerVolumeScaleUpperLimit",
     "speakerVolumeScaleLowerLimit",
+    "speakerTempoDynamicsScaleUpperLimit",
+    "speakerTempoDynamicsScaleLowerLimit",
     "autocompleteLimit",
     "dictionaryEntryLimit"
 ]);
@@ -28,6 +30,9 @@ const envSpeakerIntonationScaleLowerLimit = Number(process.env.speakerIntonation
 
 const envSpeakerVolumeScaleUpperLimit = Number(process.env.speakerVolumeScaleUpperLimit);
 const envSpeakerVolumeScaleLowerLimit = Number(process.env.speakerVolumeScaleLowerLimit);
+
+const envSpeakerTempoDynamicsScaleUpperLimit = Number(process.env.speakerTempoDynamicsScaleUpperLimit);
+const envSpeakerTempoDynamicsScaleLowerLimit = Number(process.env.speakerTempoDynamicsScaleLowerLimit);
 
 const envAutocompleteLimit = parseInt(process.env.autocompleteLimit);
 const envDictionaryEntryLimit = parseInt(process.env.dictionaryEntryLimit);
@@ -58,15 +63,14 @@ const speakersWithStyles = (async () => {
         const engine  = url.hash.replace(/^#/, ""); 
         const baseURL = url.origin;
 
-        if(!engine) return null;
+        if(!engine) continue;// エンジン識別子がない場合は無効とする
 
         const response = await fetch(baseURL + "/speakers", {
             headers: { "accept" : "application/json" },
         });
 
         if(!response.ok){
-            console.error(`speakers API failed: ${response.status} ${response.statusText}`);
-            return null;
+            throw new Error(`speakers API failed: ${response.status} ${response.statusText}`);
         }
         
         const speakers = await response.json();
@@ -169,8 +173,6 @@ const zBotSlashCommands = [
                 return;                
             }
 
-            //const guildDictionary = zBotGData.initGuildQueueIfUndefined(guildId);
-
             await interaction.reply("こんにちは!読み上げボットを接続しました");
             return;            
         }
@@ -184,11 +186,6 @@ const zBotSlashCommands = [
             let list = "";
 
             const speakers = await speakersWithStyles;
-
-            if(!speakers){
-                await interaction.reply("話者IDの一覧を作成に失敗しました");
-                return;
-            };
 
             for(const speaker of speakers){
                 list += speaker.fqn + "\r\n";
@@ -268,11 +265,6 @@ const zBotSlashCommands = [
             }
         
             const speakers = await speakersWithStyles;
-
-            if(!speakers){
-                await interaction.respond([]);
-                return;               
-            }
 
             const value = focusedOption.value ?? "";
 
@@ -368,7 +360,7 @@ const zBotSlashCommands = [
             }
 
             const memberId = interaction.member.id;
-            const memberName = interaction.member.displayName + "さん";
+            const memberName = interaction.member.displayName;
 
             const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
 
@@ -381,15 +373,8 @@ const zBotSlashCommands = [
             );
 
             memberSpeakerConfig.speedScale = scale;
-         
-            const message = 
-                memberName + "の話者を「" +
-                    "#話速:" + String(memberSpeakerConfig.speedScale     ) + " " + 
-                    "#音高:" + String(memberSpeakerConfig.pitchScale     ) + " " +
-                    "#抑揚:" + String(memberSpeakerConfig.intonationScale) + " " +
-                    "#音量:" + String(memberSpeakerConfig.volumeScale    ) +
-                "」に変更しました"
-            ;
+
+            const message = createSpeakerSettingMessage(memberName, memberSpeakerConfig);
         
             await interaction.reply(message);
             return;
@@ -429,20 +414,13 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                envSpeakerSpeedScaleLowerLimit,
-                envSpeakerSpeedScaleUpperLimit
+                envSpeakerPitchScaleLowerLimit,
+                envSpeakerPitchScaleUpperLimit
             );
 
             memberSpeakerConfig.pitchScale = scale;
 
-            const message = 
-                memberName + "の話者を「" +
-                    "#話速:" + String(memberSpeakerConfig.speedScale     ) + " " + 
-                    "#音高:" + String(memberSpeakerConfig.pitchScale     ) + " " +
-                    "#抑揚:" + String(memberSpeakerConfig.intonationScale) + " " +
-                    "#音量:" + String(memberSpeakerConfig.volumeScale    ) +
-                "」に変更しました"
-            ;
+            const message = createSpeakerSettingMessage(memberName, memberSpeakerConfig);
         
             await interaction.reply(message);
             return;
@@ -482,21 +460,14 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                envSpeakerSpeedScaleLowerLimit,
-                envSpeakerSpeedScaleUpperLimit
+                envSpeakerIntonationScaleLowerLimit,
+                envSpeakerIntonationScaleUpperLimit
             );
 
             memberSpeakerConfig.intonationScale = scale;
-
-            const message = 
-                memberName + "の話者を「" +
-                    "#話速:" + String(memberSpeakerConfig.speedScale     ) + " " + 
-                    "#音高:" + String(memberSpeakerConfig.pitchScale     ) + " " +
-                    "#抑揚:" + String(memberSpeakerConfig.intonationScale) + " " +
-                    "#音量:" + String(memberSpeakerConfig.volumeScale    ) +
-                "」に変更しました"
-            ;
         
+            const message = createSpeakerSettingMessage(memberName, memberSpeakerConfig);
+
             await interaction.reply(message);
             return;
         }
@@ -535,20 +506,59 @@ const zBotSlashCommands = [
 
             const scale = clamp(
                 interaction.options.getNumber("scale") ?? currentScale,
-                envSpeakerSpeedScaleLowerLimit,
-                envSpeakerSpeedScaleUpperLimit
+                envSpeakerVolumeScaleLowerLimit,
+                envSpeakerVolumeScaleUpperLimit
             );
 
             memberSpeakerConfig.volumeScale = scale;
 
-            const message = 
-                memberName + "の話者を「" +
-                    "#話速:" + String(memberSpeakerConfig.speedScale     ) + " " + 
-                    "#音高:" + String(memberSpeakerConfig.pitchScale     ) + " " +
-                    "#抑揚:" + String(memberSpeakerConfig.intonationScale) + " " +
-                    "#音量:" + String(memberSpeakerConfig.volumeScale    ) +
-                "」に変更しました"
-            ;
+            const message = createSpeakerSettingMessage(memberName, memberSpeakerConfig);
+        
+            await interaction.reply(message);
+            return;
+        }
+    },
+
+    {
+        "name": "tempo",
+        "description": "話者の緩急を変更します",
+        "options": [
+            {
+                "type": ApplicationCommandOptionType.Number,
+                "name": "scale",
+                "description": `話者の緩急倍率を入力してください※範囲は${envSpeakerTempoDynamicsScaleLowerLimit}～${envSpeakerTempoDynamicsScaleUpperLimit}`,
+                "max_value": envSpeakerTempoDynamicsScaleUpperLimit,
+                "min_value": envSpeakerTempoDynamicsScaleLowerLimit,
+                "required": true
+            }
+        ],
+
+        "excute": async function(interaction, zBotGData){
+            const guildId = interaction.guildId;
+        
+            const connection = getVoiceConnection(guildId);
+        
+            if(!connection){
+                await interaction.reply("まだ部屋にお呼ばれされてません・・・");
+                return;
+            }
+
+            const memberId = interaction.member.id;
+            const memberName = interaction.member.displayName + "さん";
+
+            const memberSpeakerConfig = zBotGData.initMemberSpeakerConfigIfUndefined(guildId, memberId);
+
+            const currentScale = memberSpeakerConfig.tempoDynamicsScale;
+
+            const scale = clamp(
+                interaction.options.getNumber("scale") ?? currentScale,
+                envSpeakerTempoDynamicsScaleLowerLimit,
+                envSpeakerTempoDynamicsScaleUpperLimit
+            );
+
+            memberSpeakerConfig.tempoDynamicsScale = scale;
+
+            const message = createSpeakerSettingMessage(memberName, memberSpeakerConfig);
         
             await interaction.reply(message);
             return;
@@ -816,6 +826,22 @@ const zBotSlashCommands = [
 
 function clamp(value, min, max){
     return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * 話者設定の変更を通知するメッセージを生成する
+ * @param {string} memberName - メンバー名
+ * @param {object} memberSpeakerConfig - メンバーの話者設定オブジェクト
+ * @returns {string} - 生成されたメッセージ文字列
+ */
+function createSpeakerSettingMessage(memberName, memberSpeakerConfig) {
+    return `${memberName}さんの話者を「` +
+        `#話速:${memberSpeakerConfig.speedScale         === null ? 'デフォルト' : String(memberSpeakerConfig.speedScale)}`         + " " +
+        `#音高:${memberSpeakerConfig.pitchScale         === null ? 'デフォルト' : String(memberSpeakerConfig.pitchScale)}`         + " " +
+        `#抑揚:${memberSpeakerConfig.intonationScale    === null ? 'デフォルト' : String(memberSpeakerConfig.intonationScale)}`    + " " +
+        `#音量:${memberSpeakerConfig.volumeScale        === null ? 'デフォルト' : String(memberSpeakerConfig.volumeScale)}`        + " " +
+        `#緩急:${memberSpeakerConfig.tempoDynamicsScale === null ? 'デフォルト' : String(memberSpeakerConfig.tempoDynamicsScale)}` +
+        `」に設定しました`;
 }
 
 module.exports = zBotSlashCommands;

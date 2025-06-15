@@ -47,6 +47,7 @@ async function zBotTextToSpeech(splitedText, speaker, player, queue){
         }
 
         await setTimeout(envQueuePollingInterval);
+        
         if(!queue.includes(ticket)) return; // キューから削除されていた場合は終了
         count--;
     }
@@ -78,11 +79,13 @@ const { createAudioResource, StreamType } = require("@discordjs/voice");
  * @returns {object} - 音声データ
  */
 async function voiceSynthesis(text, speaker){
-    const server = getVoiceServers().find( (x) => { return x.engine === speaker.engine; });
+    const servers = getVoiceServers();
+    const server = servers.find( (x) => { return x.engine === speaker.engine; });
 
     if(!server){
-        console.error(`Failed to retrieve voice server information for engine '${speaker.engine}'. Please check the configuration format.`);
-        return null;
+        // console.error(`Failed to retrieve voice server information for engine '${speaker.engine}'. Please check the configuration format.`);
+        // return null;
+        throw new Error(`Failed to retrieve voice server information for engine '${speaker.engine}'. Please check the configuration format.`);
      }
 
     // 音声合成のクエリ作成
@@ -92,16 +95,24 @@ async function voiceSynthesis(text, speaker){
     });
 
     if(!response_audio_query.ok){
-        console.error(`audio_query API failed: ${response_audio_query.status} ${response_audio_query.statusText}`);
-        return null;
+        // console.error(`audio_query API failed: ${response_audio_query.status} ${response_audio_query.statusText}`);
+        // return null;
+        throw new Error(`audio_query API failed: ${response_audio_query.status} ${response_audio_query.statusText}`);
     }
 
     const audioQuery = await response_audio_query.json();
 
-    audioQuery.speedScale       = speaker.speedScale;
-    audioQuery.pitchScale       = speaker.pitchScale;
-    audioQuery.intonationScale  = speaker.intonationScale;
-    audioQuery.volumeScale      = speaker.volumeScale;
+    // audioQuery.speedScale       = speaker.speedScale;
+    // audioQuery.pitchScale       = speaker.pitchScale;
+    // audioQuery.intonationScale  = speaker.intonationScale;
+    // audioQuery.volumeScale      = speaker.volumeScale;
+
+    // どちらも設定されている場合は、音声合成クエリに適用
+    if(audioQuery.speedScale !== void 0 && speaker.speedScale !== null)                 audioQuery.speedScale      = speaker.speedScale;
+    if(audioQuery.pitchScale !== void 0 && speaker.pitchScale !== null)                 audioQuery.pitchScale      = speaker.pitchScale;
+    if(audioQuery.intonationScale !== void 0 && speaker.intonationScale !== null)       audioQuery.intonationScale = speaker.intonationScale;
+    if(audioQuery.volumeScale !== void 0 && speaker.volumeScale !== null)               audioQuery.volumeScale     = speaker.volumeScale;
+    if(audioQuery.tempoDynamicsScale !== void 0 && speaker.tempoDynamicsScale !== null) audioQuery.tempoDynamicsScale    = speaker.tempoDynamicsScale;
 
     audioQuery.outputSamplingRate = envSamplingRate;
 
@@ -113,8 +124,9 @@ async function voiceSynthesis(text, speaker){
     });
 
     if(!response_synthesis.ok){
-        console.error(`synthesis API failed: ${response_synthesis.status} ${response_synthesis.statusText}`);
-        return null;
+        // console.error(`synthesis API failed: ${response_synthesis.status} ${response_synthesis.statusText}`);
+        // return null;
+        throw new Error(`synthesis API failed: ${response_synthesis.status} ${response_synthesis.statusText}`);
     }
 
     // ストリームとして音声データを扱う
@@ -145,17 +157,14 @@ function deQueue(queue, ticket){
     if(!queue.includes(ticket)) return; // チケットが含まれていない場合、処理をしない。
 
     const index = queue.indexOf(ticket);
-    
-    if(index !== -1){
-        queue.splice(0, index + 1);// 自分より前のチケットも削除
-    }
+    queue.splice(0, index + 1);// 自分より前のチケットも削除
     
     return;
 }
 
 /**
  * 音声サーバーを取得する
- * @returns {object[]} - サーバーの配列
+ * @returns {object[]} - サーバー情報の配列
  */
 function getVoiceServers(){
     const servers = [];
@@ -167,7 +176,7 @@ function getVoiceServers(){
         const engine  = url.hash.replace(/^#/, ""); 
         const baseURL = url.origin;
 
-        if(!engine) return null; // エンジン識別子がない場合は無効とする
+        if(!engine) continue; // エンジン識別子がない場合は無効とする
 
         servers.push({ "engine": engine, "baseURL": baseURL });
     }
