@@ -4,12 +4,23 @@ require("dotenv").config();
 require("./utils/chkEnvVars")([
     "defaultSpeakerEngine",
     "defaultSpeakerId",
+    "defaultSpeakerSpeedScale",
+    "defaultSpeakerPitchScale",
+    "defaultSpeakerIntonationScale",
+    "defaultSpeakerVolumeScale",
+
     "guildConfigsDir",
     "guildDictionariesDir"
 ]);
 
 const envDefaultSpeakerEngine = process.env.defaultSpeakerEngine;
 const envDefaultSpeakerId     = parseInt(process.env.defaultSpeakerId);
+
+const envDefaultSpeakerSpeedScale          = Number(process.env.defaultSpeakerSpeedScale);
+const envDefaultSpeakerPitchScale          = Number(process.env.defaultSpeakerPitchScale);
+const envDefaultSpeakerIntonationScale     = Number(process.env.defaultSpeakerIntonationScale);
+const envDefaultSpeakerVolumeScale         = Number(process.env.defaultSpeakerVolumeScale);
+const envDefaultSpeakerTempoDynamicsScale  = Number(process.env.defaultSpeakerTempoDynamicsScale);
 
 const envGuildConfigsDir      = process.env.guildConfigsDir;
 const envGuildDictionariesDir = process.env.guildDictionariesDir;
@@ -69,11 +80,11 @@ zBotGData.prototype.initMemberSpeakerConfigIfUndefined = function(guildId, membe
     this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].id     ??= envDefaultSpeakerId;
 
     // nullはdefault値として扱う(audio_queryを書き換えない)
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].speedScale         ??= null;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].pitchScale         ??= null;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].intonationScale    ??= null;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].volumeScale        ??= null;
-    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].tempoDynamicsScale ??= null;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].speedScale         ??= envDefaultSpeakerSpeedScale;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].pitchScale         ??= envDefaultSpeakerPitchScale;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].intonationScale    ??= envDefaultSpeakerIntonationScale;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].volumeScale        ??= envDefaultSpeakerVolumeScale;
+    this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId].tempoDynamicsScale ??= envDefaultSpeakerTempoDynamicsScale;
 
     return this.zBotGuildConfigs[guildId].memberSpeakerConfigs[memberId];
 }

@@ -836,11 +836,11 @@ function clamp(value, min, max){
  */
 function createSpeakerSettingMessage(memberName, memberSpeakerConfig) {
     return `${memberName}さんの話者を「` +
-        `#話速:${memberSpeakerConfig.speedScale         === null ? 'デフォルト' : String(memberSpeakerConfig.speedScale)}`         + " " +
-        `#音高:${memberSpeakerConfig.pitchScale         === null ? 'デフォルト' : String(memberSpeakerConfig.pitchScale)}`         + " " +
-        `#抑揚:${memberSpeakerConfig.intonationScale    === null ? 'デフォルト' : String(memberSpeakerConfig.intonationScale)}`    + " " +
-        `#音量:${memberSpeakerConfig.volumeScale        === null ? 'デフォルト' : String(memberSpeakerConfig.volumeScale)}`        + " " +
-        `#緩急:${memberSpeakerConfig.tempoDynamicsScale === null ? 'デフォルト' : String(memberSpeakerConfig.tempoDynamicsScale)}` +
+        `#話速:${String(memberSpeakerConfig.speedScale)}`         + " " +
+        `#音高:${String(memberSpeakerConfig.pitchScale)}`         + " " +
+        `#抑揚:${String(memberSpeakerConfig.intonationScale)}`    + " " +
+        `#音量:${String(memberSpeakerConfig.volumeScale)}`        + " " +
+        `#緩急:${String(memberSpeakerConfig.tempoDynamicsScale)}` +
         `」に設定しました`;
 }
 

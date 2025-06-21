@@ -99,11 +99,11 @@ async function voiceSynthesis(text, speaker){
     const audioQuery = await response_audio_query.json();
 
     // どちらも設定されている場合は、音声合成クエリに適用
-    if(audioQuery.speedScale !== void 0 && speaker.speedScale !== null)                 audioQuery.speedScale            = speaker.speedScale;
-    if(audioQuery.pitchScale !== void 0 && speaker.pitchScale !== null)                 audioQuery.pitchScale            = speaker.pitchScale;
-    if(audioQuery.intonationScale !== void 0 && speaker.intonationScale !== null)       audioQuery.intonationScale       = speaker.intonationScale;
-    if(audioQuery.volumeScale !== void 0 && speaker.volumeScale !== null)               audioQuery.volumeScale           = speaker.volumeScale;
-    if(audioQuery.tempoDynamicsScale !== void 0 && speaker.tempoDynamicsScale !== null) audioQuery.tempoDynamicsScale    = speaker.tempoDynamicsScale;
+    if(audioQuery.speedScale         !== void 0) audioQuery.speedScale         = speaker.speedScale;
+    if(audioQuery.pitchScale         !== void 0) audioQuery.pitchScale         = speaker.pitchScale;
+    if(audioQuery.intonationScale    !== void 0) audioQuery.intonationScale    = speaker.intonationScale;
+    if(audioQuery.volumeScale        !== void 0) audioQuery.volumeScale        = speaker.volumeScale;
+    if(audioQuery.tempoDynamicsScale !== void 0) audioQuery.tempoDynamicsScale = speaker.tempoDynamicsScale;
 
     audioQuery.outputSamplingRate = envSamplingRate;
 

@@ -2,7 +2,7 @@
 token = "Your token"
 guildIds = "Your server IDs separated by semicolon(;)"
 
-# voiceServers = "http://localhost:50021#VOICEVOX;http://localhost:50025#SHAREVOX"
+# voiceServers = "http://localhost:50021#VOICEVOX;http://localhost:10101#AivisSpeech"
 voiceServers = "http://localhost:50021#VOICEVOX"
 
 voiceServerTextLengthLimit = 160
@@ -12,7 +12,15 @@ guildDictionariesDir = "./guild_dictionaries"
 
 # Default speaker configs.
 defaultSpeakerEngine = "VOICEVOX"
-defaultSpeakerId     = 3 
+defaultSpeakerId     = 3
+
+defaultSpeakerSpeedScale         = 1.00
+defaultSpeakerPitchScale         = 0.00
+defaultSpeakerIntonationScale    = 1.00
+defaultSpeakerVolumeScale        = 1.00
+## for AivisSpeech only
+defaultSpeakerTempoDynamicsScale = 1.0
+
 
 # Ranges of speaker config value.
 # Do not overwrite without a reason.
