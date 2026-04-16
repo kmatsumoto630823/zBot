@@ -53,13 +53,16 @@ async function zBotTextToSpeech(splitedText, speaker, player){
         }
 
         const waveDatas = [];
+        const requestIntervalMillisec = 100;
 
         for(const text of splitedText){
             const waveData = await voiceSynthesis(text, speaker);
             if(!queue.includes(ticket)) return;  // キューから削除された場合は終了
 
             if(!waveData) continue;
+            
             waveDatas.push(waveData);
+            await setTimeout(requestIntervalMillisec);
         }
 
         for(const waveData of waveDatas){
@@ -67,6 +70,7 @@ async function zBotTextToSpeech(splitedText, speaker, player){
             if(!queue.includes(ticket)) return;  // キューから削除された場合は終了
 
             player.play(waveData);
+            await setTimeout(requestIntervalMillisec);
         }
     } catch(error) {
         throw error;
@@ -105,7 +109,6 @@ async function voiceSynthesis(text, speaker){
 
     const audioQuery = await response_audio_query.json();
 
-
     // プロパティがある場合のみ上書きする
     if(audioQuery.speedScale         !== void 0) audioQuery.speedScale         = speaker.speedScale;
     if(audioQuery.pitchScale         !== void 0) audioQuery.pitchScale         = speaker.pitchScale;
@@ -113,10 +116,6 @@ async function voiceSynthesis(text, speaker){
     if(audioQuery.volumeScale        !== void 0) audioQuery.volumeScale        = speaker.volumeScale;
     if(audioQuery.tempoDynamicsScale !== void 0) audioQuery.tempoDynamicsScale = speaker.tempoDynamicsScale;
     
-    // プロパティがある場合のみ上書きする
-    //for(const [key, value] of Object.entries(speaker)){
-    //    if(audioQuery[key] !== void 0) audioQuery[key] = value;
-    //}
 
     if(audioQuery.outputSamplingRate !== void 0) audioQuery.outputSamplingRate = envSamplingRate;
 

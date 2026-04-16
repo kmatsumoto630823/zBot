@@ -649,7 +649,7 @@ const zBotSlashCommands = [
         }
     },
 
-
+/*
     {
         "name": "ghost",
         "description": "隠れてそっと発言します",
@@ -692,7 +692,7 @@ const zBotSlashCommands = [
         }
 
     },
-
+*/
     {
         "name": "reaction",
         "description": "リアクションスタンプ読み上げの有効・無効を切り替えます",
