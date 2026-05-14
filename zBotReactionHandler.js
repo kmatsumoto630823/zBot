@@ -36,11 +36,11 @@ async function zBotReactionHandler(reaction, user, zBotGData){
     const text = (reaction.emoji.id === null) ? reaction.emoji.name : "<::" + reaction.emoji.id + ">";
     const dict = zBotGData.initGuildDictionaryIfUndefined(guildId);
 
-    const splitedText = zBotTextPreprocessor(text, dict);
+    const splitText = zBotTextPreprocessor(text, dict);
     const speaker = memberSpeakerConfig;
     const player = connection.state.subscription.player;
 
-    await zBotTextToSpeech(splitedText, speaker, player);
+    await zBotTextToSpeech(splitText, speaker, player);
 
     return;
 };

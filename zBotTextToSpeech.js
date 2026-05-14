@@ -17,20 +17,22 @@ const envQueueTimeout = parseInt(process.env.queueTimeout);
 const envQueuePollingInterval = parseInt(process.env.queuePollingInterval);
 
 const { setTimeout } = require("timers/promises");
-const { entersState, AudioPlayerStatus } = require("@discordjs/voice");
+const { Readable } = require("stream");
+const { createAudioResource, StreamType, entersState, AudioPlayerStatus } = require("@discordjs/voice");
+
 
 /**
  * 音声合成してDiscordで再生する
- * @param {string[]} splitedText - 分割されたテキスト
+ * @param {string[]} splitText - 分割されたテキスト
  * @param {object} speaker - 話者オブジェクト
  * @param {object} player - オーディオプレーヤー
  */
-async function zBotTextToSpeech(splitedText, speaker, player){
-    const fullTextLength = splitedText.reduce((sum, text) => sum + text.length, 0);
+async function zBotTextToSpeech(splitText, speaker, player){
+    const fullTextLength = splitText.reduce((sum, text) => sum + text.length, 0);
 
     // 文字数制限を超えた場合の処理
     if(fullTextLength > envVoiceServerTextLengthLimit){
-        splitedText = ["文字数が上限を超えています"];
+        splitText = ["文字数が上限を超えているのだ"];
     }
 
     const queue = getQueue(player);
@@ -52,26 +54,31 @@ async function zBotTextToSpeech(splitedText, speaker, player){
             count--;
         }
 
-        const waveDatas = [];
-        const requestIntervalMillisec = 100;
+        const wavBuffers = [];
 
-        for(const text of splitedText){
-            const waveData = await voiceSynthesis(text, speaker);
+        for(const text of splitText){
+            const buffer = await voiceSynthesis(text, speaker);
             if(!queue.includes(ticket)) return;  // キューから削除された場合は終了
 
-            if(!waveData) continue;
+            if(!buffer) continue;
             
-            waveDatas.push(waveData);
-            await setTimeout(requestIntervalMillisec);
+            wavBuffers.push(buffer);
         }
 
-        for(const waveData of waveDatas){
-            await entersState(player, AudioPlayerStatus.Idle, envQueueTimeout); // 前の音声再生が終わるまで待つ
-            if(!queue.includes(ticket)) return;  // キューから削除された場合は終了
+        const mergedWavBuffer = concatWavBuffers(wavBuffers);
 
-            player.play(waveData);
-            await setTimeout(requestIntervalMillisec);
-        }
+        if(wavBuffers.length === 0) return;
+
+        const audioResource = createAudioResource(Readable.from(mergedWavBuffer), { 
+            inputType: StreamType.Arbitrary
+        });
+
+        await entersState(player, AudioPlayerStatus.Idle, envQueueTimeout);
+        if(!queue.includes(ticket)) return;
+
+        player.play(audioResource);        
+
+
     } catch(error) {
         throw error;
     } finally {
@@ -81,13 +88,11 @@ async function zBotTextToSpeech(splitedText, speaker, player){
     return;
 }
 
-const { createAudioResource, StreamType } = require("@discordjs/voice");
-
 /**
  * 音声を合成する
  * @param {string} text - 合成するテキスト
  * @param {object} speaker - 話者オブジェクト
- * @returns {object} - 音声データ
+ * @returns {Buffer} - 音声データ
  */
 async function voiceSynthesis(text, speaker){
     const servers = getVoiceServers();
@@ -130,11 +135,48 @@ async function voiceSynthesis(text, speaker){
         throw new Error(`synthesis API failed: ${response_synthesis.status} ${response_synthesis.statusText}`);
     }
 
-    // ストリームとして音声データを扱う
-    const stream = response_synthesis.body;
-    const waveData = createAudioResource(stream, { inputType: StreamType.Arbitrary });
-    
-    return waveData;
+    const arrayBuffer = await response_synthesis.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+}
+
+
+/**
+ * 複数のWAVバッファをメモリ上で1つに結合する（厳密なチェックは行わない）
+ * @param {Buffer[]} buffers - WAVデータの配列
+ * @returns {Buffer|null} - 結合されたWAVデータ
+ */
+function concatWavBuffers(buffers) {
+    if(!buffers || buffers.length === 0) return null;
+    if(buffers.length === 1) return buffers[0];
+
+    // BWFは考慮しない
+    const headerSize = 44;
+
+    // 全体のデータサイズ（ヘッダーを除いた純粋な音声データの合計）を計算
+    let totalDataLength = 0;
+    for(const buffer of buffers){
+        totalDataLength += buffer.length - headerSize;
+    }
+
+    // 新しい結合用バッファをメモリ上に確保
+    const outBuffer = Buffer.alloc(headerSize + totalDataLength);
+
+    // 1つ目のWAVのヘッダーをコピー
+    buffers[0].copy(outBuffer, 0, 0, headerSize);
+
+    // ヘッダーのサイズ情報を新しいサイズに書き換え（WAVの仕様準拠）
+    outBuffer.writeUInt32LE(headerSize + totalDataLength - 8, 4);  // RIFF chunk size
+    outBuffer.writeUInt32LE(totalDataLength, headerSize - 4);      // data chunk size
+
+    // 各バッファの音声データ部分を順番に書き込む
+    let offset = headerSize;
+    for(const buffer of buffers){
+        const dataLength = buffer.length - headerSize;
+        buffer.copy(outBuffer, offset, headerSize);
+        offset += dataLength;
+    }
+
+    return outBuffer;
 }
 
 const playerQueues = new WeakMap();

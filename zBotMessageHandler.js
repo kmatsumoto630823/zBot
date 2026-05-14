@@ -33,11 +33,11 @@ async function zBotMessageHandler(message, zBotGData){
     const text = message.content;
     const dict = zBotGData.initGuildDictionaryIfUndefined(guildId);
 
-    const splitedText = zBotTextPreprocessor(text, dict);
+    const splitText = zBotTextPreprocessor(text, dict);
     const speaker = memberSpeakerConfig;
     const player = connection.state.subscription.player;
 
-    await zBotTextToSpeech(splitedText, speaker, player);
+    await zBotTextToSpeech(splitText, speaker, player);
 
     return;
 };

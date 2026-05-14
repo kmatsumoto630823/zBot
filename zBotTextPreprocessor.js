@@ -45,9 +45,9 @@ function zBotTextPreprocessor(text, dict){
     text = text.replace(/(?<!\0)\0(?!\0)/g, "、");
 
     // テキストの分割と空文字の削除
-    const splitedText = text.split("\0").filter(x => x !== "");
+    const splitText = text.split("\0").filter(x => x !== "");
 
-    return splitedText;
+    return splitText;
 };
 
 /**
