@@ -1,9 +1,9 @@
 # zBot
 Discord用読み上げTTSBot  
-音声変換にVOICEVOX（とその互換エンジン）を利用  
-複数のサーバー（ギルド）でも動作しますが、基本的には小規模運用想定  
+音声変換にVOICEVOX（とその互換エンジン）を利用可能  
+複数のサーバー（ギルド）でも動作するが、基本的には小規模運用想定  
 DBは使わずサーバー（ギルド）の設定ファイルでストア・リストア    
-話者の情報はBot起動時にAPIで取得、話者の追加にはBotの再起動で追随  
+話者の情報はBot起動時にAPIで取得（話者の追加にはBotの再起動で追随可）  
 
 # 使い方(Slach Commnad)
 /connect  
@@ -37,7 +37,7 @@ DBは使わずサーバー（ギルド）の設定ファイルでストア・リ
     ・・・ヘルプを表示します    
 
 # Dependencies(というよりは自分の環境)
-- Redhat Enterprise Linux 9（Minimal + Development Tools）
+- Redhat Enterprise Linux 10（Minimal + Development Tools）
 - Node.js v22
 - NPM Packages
   - "@discordjs/opus"
@@ -108,7 +108,7 @@ guildDictionariesDir = "./guild_dictionaries"
 $ node index.js
 ```
 
-※自分はpm2で簡易的に管理してます
+※作者はpm2で簡易的に管理してます
 
 # Author
 kmatsumoto630823

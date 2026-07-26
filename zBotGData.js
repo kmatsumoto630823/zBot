@@ -130,33 +130,36 @@ zBotGData.prototype.initGuildDictionary = function(guildId){
  * @param {function} initFunc - 初期化する関数(this.initGuildConfigIfUndefined or this.initGuildDictionaryIfUndefined)
  */
 zBotGData.prototype.restoreData = function(guildId, path, target, initFunc){
+    let json = "";
+    let obj = null;
+
     try{
-        const json = fs.readFileSync(path);
-        const obj = JSON.parse(json);
-
-        // 読み込んだデータを元にハッシュ値を計算し、obj.__hash__ に設定(整合性確認用)
-        const hash = crypto.createHash("sha256").update(json).digest("hex");
-        obj.__hash__ = hash;
-
-        target[guildId] = obj;
+        // ファイルがあれば読み込む
+        json = fs.readFileSync(path, "utf8");
+        obj = JSON.parse(json);
     }catch(error){
-         // エラーコードがENOENTの場合、ファイルが存在しないので、初期化処理を行う
         if(error.code === "ENOENT"){
-            // 初期化関数を実行
+            // ファイルが無い場合：初期データを構築し、新規ファイルとして保存
             initFunc.call(this, guildId);
-
-            const obj = target[guildId];
-            const json = JSON.stringify(obj);
-
+            obj = target[guildId];
+            json = JSON.stringify(obj);
             fs.writeFileSync(path, json);
-
-            // 保存した文字列を元にハッシュ値を計算し、obj.__hash__ に設定(整合性確認用)
-            const hash = crypto.createHash("sha256").update(json).digest("hex");
-            obj.__hash__ = hash;
         }else{
             throw new Error(`Failed to read or parse file: ${path} (Guild: ${guildId}). Details: ${error.message}`);
         }
     }
+
+    // ハッシュを付与
+    const hash = crypto.createHash("sha256").update(json).digest("hex");
+    
+    Object.defineProperty(obj, "__hash__", {
+        value: hash,
+        enumerable: false, // JSON.stringify に含まれない
+        writable: true,    // 後で再代入可能
+        configurable: true
+    });
+
+    target[guildId] = obj;
     
     return true;
 }
@@ -168,22 +171,28 @@ zBotGData.prototype.restoreData = function(guildId, path, target, initFunc){
  * @param {object} target - 保存するオブジェクト(this.zBotGuildConfigs or this.zBotGuildDictionaries)
  */
 zBotGData.prototype.saveData = function(guildId, path, target){
+    const obj = target[guildId];
+    if(!obj) return false;
+
+    const hash1 = obj.__hash__;
+
     try{
-        const obj  = target[guildId];
-        const hash1 = obj.__hash__;
-    
-        const json = fs.readFileSync(path);
+        // 現在のファイルを読み込み、hash2を計算する
+        const json = fs.readFileSync(path, "utf8");
         const hash2 = crypto.createHash("sha256").update(json).digest("hex");
-    
-        // 事前に取得したハッシュ値と現在のファイルのハッシュ値が一致しない場合(データが変更されている)
+
+        // ハッシュが完全一致しない場合は例外を投げる
         if(hash1 !== hash2){
-            // return false;
             throw new Error(`Data mismatch for guild ${guildId}: expected hash ${hash1}, got ${hash2}`);
         }
-    
-        delete obj.__hash__;
-        fs.writeFileSync(path, JSON.stringify(obj));
-    }catch(error){
+
+        // 書き込みとハッシュ更新
+        const newJson = JSON.stringify(obj);
+        fs.writeFileSync(path, newJson);
+        obj.__hash__ = crypto.createHash("sha256").update(newJson).digest("hex");
+
+    }catch(error) {
+        // ハッシュ不一致、ファイル消失などすべての異常をここでキャッチして保存をブロック
         throw new Error(`Failed to save file: ${path} (Guild: ${guildId}). Details: ${error.message}`);
     }
 

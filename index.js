@@ -24,9 +24,9 @@ const client = new Client({ "intents": [
     GatewayIntentBits.MessageContent
 ] });
 
-zBotGData = require("./zBotGData");
-zBotSlashCommands = require("./zBotSlashCommands");
-cooldowns = new Map();
+const zBotGData = require("./zBotGData");
+const zBotSlashCommands = require("./zBotSlashCommands");
+const cooldowns = new Map();
 
 const { generateDependencyReport } = require('@discordjs/voice');
 

@@ -4,6 +4,10 @@ const emojiRegex = require("./utils/emojiRegex");
 const compiledEmojiRegex = emojiRegex();
 const compiledEmojiRegexWithSpace = new RegExp(`(${compiledEmojiRegex.source}) ?`, "gu");
 
+function escapeRegExp(string){
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * テキストを読み上げ用に前処理する
  * @param {string} text - 処理するテキスト
@@ -56,15 +60,21 @@ function zBotTextPreprocessor(text, dict){
  * @param {object} dict - 置換辞書
  * @returns {string} - 置換後のテキスト
  */
+
 function replaceByLongestMatch(text, dict){
-    const sortedWordsByLength = Object.keys(dict).toSorted((a, b) => b.length - a.length);
+    const keys = Object.keys(dict);
+    if (keys.length === 0) return text;
 
-    for(const word of sortedWordsByLength){
-        const reading = dict[word];
-        text = text.replaceAll(word, reading);
-    }
+    // 長い順にソートして A|B|C という正規表現を作る
+    const pattern = keys
+        .sort((a, b) => b.length - a.length)
+        .map(escapeRegExp)
+        .join("|");
+    
+    const regex = new RegExp(pattern, "g");
 
-    return text;
+    // 文字列全体を1回だけスキャンし、マッチした部分を辞書の値に置き換える
+    return text.replace(regex, (match) => dict[match]);
 };
 
 module.exports = zBotTextPreprocessor;

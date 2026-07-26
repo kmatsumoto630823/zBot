@@ -100,7 +100,7 @@ async function voiceSynthesis(text, speaker){
 
     if(!server){
         throw new Error(`Failed to retrieve voice server information for engine '${speaker.engine}'. Please check the configuration format.`);
-     }
+    }
 
     // 音声合成のクエリ作成
     const response_audio_query = await fetch(server.baseURL + "/audio_query?text=" + encodeURIComponent(text) + "&speaker=" + speaker.id, {
@@ -120,7 +120,6 @@ async function voiceSynthesis(text, speaker){
     if(audioQuery.intonationScale    !== void 0) audioQuery.intonationScale    = speaker.intonationScale;
     if(audioQuery.volumeScale        !== void 0) audioQuery.volumeScale        = speaker.volumeScale;
     if(audioQuery.tempoDynamicsScale !== void 0) audioQuery.tempoDynamicsScale = speaker.tempoDynamicsScale;
-    
 
     if(audioQuery.outputSamplingRate !== void 0) audioQuery.outputSamplingRate = envSamplingRate;
 
@@ -139,13 +138,12 @@ async function voiceSynthesis(text, speaker){
     return Buffer.from(arrayBuffer);
 }
 
-
 /**
  * 複数のWAVバッファをメモリ上で1つに結合する（厳密なチェックは行わない）
  * @param {Buffer[]} buffers - WAVデータの配列
  * @returns {Buffer|null} - 結合されたWAVデータ
  */
-function concatWavBuffers(buffers) {
+function concatWavBuffers(buffers){
     if(!buffers || buffers.length === 0) return null;
     if(buffers.length === 1) return buffers[0];
 
@@ -155,7 +153,13 @@ function concatWavBuffers(buffers) {
     // 全体のデータサイズ（ヘッダーを除いた純粋な音声データの合計）を計算
     let totalDataLength = 0;
     for(const buffer of buffers){
-        totalDataLength += buffer.length - headerSize;
+        const dataLength = buffer.length - headerSize
+        if(dataLength < 0) return null;
+
+        const chunkId = buffer.subarray(headerSize - 8, headerSize - 4).toString("ascii");
+        if(chunkId !== "data") return null;
+
+        totalDataLength += dataLength;
     }
 
     // 新しい結合用バッファをメモリ上に確保
@@ -186,7 +190,7 @@ const playerQueues = new WeakMap();
  * @param {object} player 
  * @returns {Array} queue
  */
-function getQueue(player) {
+function getQueue(player){
     return playerQueues.get(player) ?? playerQueues.set(player, []).get(player);
 }
 

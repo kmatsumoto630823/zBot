@@ -2,26 +2,25 @@
   "name": "zbot",
   "version": "1.0.0",
   "description": "Discord用読み上げTTSBot   音声変換にVOICEVOX（とその互換エンジン）を利用   複数のサーバー（ギルド）でも動作しますが、基本的には小規模運用想定   DBは使わずサーバー（ギルド）の設定ファイルでストア・リストア     話者の情報はBot起動時にAPIで取得、話者の追加にはBotの再起動で追随",
-  "homepage": "https://github.com/kmatsumoto630823/zBot#readme",
-  "bugs": {
-    "url": "https://github.com/kmatsumoto630823/zBot/issues"
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kmatsumoto630823/zBot.git"
   },
-  "license": "MIT",
   "author": "",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kmatsumoto630823/zBot/issues"
   },
+  "homepage": "https://github.com/kmatsumoto630823/zBot#readme",
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.19.2",
-    "discord.js": "^14.25.1",
-    "dotenv": "^17.3.1",
+    "discord.js": "^14.26.4",
+    "dotenv": "^17.4.2",
     "ffmpeg-static": "^5.3.0"
   }
 }
